@@ -20,7 +20,7 @@ const cursosMock = [
     image:
       "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
     duration: "4 semanas • Online",
-    url: "https://link-para-curso1.com",
+    url: "https://sebrae.com.br/sites/PortalSebrae/cursosonline/aprender-a-empreender,b070b8a6a28bb610VgnVCM1000004c00210aRCRD",
     details:
       "Neste curso você aprenderá tudo que precisa para começar seu próprio negócio, desde a concepção da ideia, elaboração do plano, até dicas práticas para superar desafios comuns dos iniciantes.",
   },
@@ -32,7 +32,7 @@ const cursosMock = [
     image:
       "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
     duration: "4 semanas • Online",
-    url: "https://link-para-curso2.com",
+    url: "https://www.sebrae-sc.com.br/blog/marketing-digital-para-pequenos-negocios",
     details:
       "Explore estratégias modernas de marketing digital, como o uso das redes sociais, campanhas pagas, SEO e muito mais para expandir a presença digital do seu negócio.",
   },
@@ -44,7 +44,7 @@ const cursosMock = [
     image:
       "https://images.unsplash.com/photo-1556741533-f6acd647d2fb?auto=format&fit=crop&w=800&q=80",
     duration: "3 semanas • Online",
-    url: "https://link-para-curso3.com",
+    url: "https://sebrae.com.br/sites/PortalSebrae/cursosonline/gestao-financeira,7370b8a6a28bb610VgnVCM1000004c00210aRCRD",
     details:
       "Aprenda a controlar seu fluxo de caixa, elaborar orçamentos e interpretar indicadores financeiros para tomar decisões seguras e inteligentes.",
   },
@@ -329,3 +329,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+    
