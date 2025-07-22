@@ -1,245 +1,208 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  Image,
   ScrollView,
   TextInput,
-  Linking,
+  TouchableOpacity,
+  Image,
+  Animated,
+  Vibration,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";
 
-const noticiasMock = [
-  {
-    title: "Empreendedoras brasileiras se destacam no mercado de tecnologia",
-    description:
-      "Mulheres estão liderando startups inovadoras e conquistando espaço no setor de tecnologia.",
-    image:
-      "https://img.freepik.com/fotos-premium/empresaria-computador-portatil-cafe_392895-124439.jpg",
-    publishedAt: "2025-07-16T14:00:00Z",
-    url: "https://www.exemplo.com/empreendedoras-tecnologia",
-  },
-  {
-    title: "Feiras de empreendedorismo feminino movimentam economia local",
-    description:
-      "Eventos promovem produtos de mulheres empreendedoras e fomentam o desenvolvimento regional.",
-    image:
-      "https://img.freepik.com/fotos-premium/mulheres-vendedoras-feirinha_392895-123456.jpg",
-    publishedAt: "2025-07-15T10:00:00Z",
-    url: "https://www.exemplo.com/feiras-femininas",
-  },
-  {
-    title: "Projeto incentiva meninas a empreender desde cedo",
-    description:
-      "Iniciativa educacional ensina conceitos de empreendedorismo para estudantes do ensino médio.",
-    image:
-      "https://img.freepik.com/fotos-premium/jovem-menina-projeto-escola_392895-99887.jpg",
-    publishedAt: "2025-07-14T08:00:00Z",
-    url: "https://www.exemplo.com/projeto-meninas",
-  },
-  {
-    title: "Mulheres negras empreendedoras quebram barreiras e inspiram",
-    description:
-      "Histórias de superação mostram como a força e a criatividade feminina estão transformando comunidades.",
-    image:
-      "https://img.freepik.com/fotos-premium/mulher-negra-feliz-trabalho_392895-567888.jpg",
-    publishedAt: "2025-07-12T12:30:00Z",
-    url: "https://www.exemplo.com/mulheres-inspiram",
-  },
-];
+export default function NotificacoesScreen() {
+  const [mensagem, setMensagem] = useState("");
+  const [notificacoes, setNotificacoes] = useState([]);
 
-export function NoticiasScreen({ navigation, route }) {
-  const id = route.params?.id;
-  const [search, setSearch] = useState("");
-  const [noticias, setNoticias] = useState(noticiasMock);
+  const mensagensPadrao = [
+    {
+      titulo: "Nova tarefa disponível!",
+      texto: "Você tem uma nova atividade para responder hoje.",
+    },
+    {
+      titulo: "Lembrete de estudo",
+      texto: "Não se esqueça de revisar o conteúdo da aula de hoje.",
+    },
+    {
+      titulo: "Mensagem da professora",
+      texto: "Parabéns pelo seu desempenho na última atividade!",
+    },
+  ];
 
-  const handleSearch = () => {
-    const resultado = noticiasMock.filter(
-      (noticia) =>
-        noticia.title.toLowerCase().includes(search.toLowerCase()) ||
-        noticia.description.toLowerCase().includes(search.toLowerCase())
-    );
-    setNoticias(resultado);
+  useEffect(() => {
+    let index = 0;
+    const intervalo = setInterval(() => {
+      if (index < mensagensPadrao.length) {
+        adicionarNotificacao(mensagensPadrao[index]);
+        index++;
+      } else {
+        clearInterval(intervalo);
+      }
+    }, 4000);
+
+    return () => clearInterval(intervalo);
+  }, []);
+
+  async function tocarSom() {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require("../../assets/notificacao.mp3")
+      );
+      await sound.playAsync();
+    } catch (error) {
+      console.log("Erro ao tocar som:", error);
+    }
+  }
+
+  const adicionarNotificacao = (novaMensagem) => {
+    const fadeAnim = new Animated.Value(0);
+
+    const novaNotif = { ...novaMensagem, fadeAnim };
+
+    setNotificacoes((prev) => [novaNotif, ...prev]);
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+
+    Vibration.vibrate(300);
+    tocarSom();
   };
 
-  const resetSearch = () => {
-    setSearch("");
-    setNoticias(noticiasMock);
+  const handleEnviar = () => {
+    if (mensagem.trim() === "") return;
+    adicionarNotificacao({ titulo: "Nova notificação", texto: mensagem });
+    setMensagem("");
+  };
+
+  const handleLimpar = () => {
+    setNotificacoes([]);
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Ionicons
-        name="arrow-back"
-        size={24}
-        color="#DB3C8A"
-        style={styles.backIcon}
-        onPress={() => navigation.navigate("Home", { id })}
-      />
+      <Text style={styles.title}>Central de Notificações</Text>
 
-      <Image source={require("../../assets/logo.png")} style={styles.logo} />
-
-      <Text style={styles.title}>
-        Notícias sobre empreendedorismo feminino!
-      </Text>
-
-      <View style={styles.searchContainer}>
+      <View style={styles.inputSection}>
         <TextInput
-          placeholder="Buscar por palavras..."
-          placeholderTextColor="#A01773"
-          value={search}
-          onChangeText={setSearch}
+          placeholder="Digite uma nova notificação"
+          placeholderTextColor="#999"
           style={styles.input}
+          value={mensagem}
+          onChangeText={setMensagem}
         />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-          <Ionicons name="search" size={20} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
-          <Ionicons name="refresh" size={20} color="#fff" />
+        <TouchableOpacity style={styles.btnEnviar} onPress={handleEnviar}>
+          <Text style={styles.btnEnviarText}>Enviar</Text>
         </TouchableOpacity>
       </View>
 
-      {noticias.length === 0 ? (
-        <Text style={styles.noNews}>Nenhuma notícia encontrada.</Text>
-      ) : (
-        noticias.map((noticia, i) => (
-          <View key={noticia.url || i} style={styles.card}>
-            {noticia.image && (
-              <Image source={{ uri: noticia.image }} style={styles.cardImage} />
-            )}
-            <Text style={styles.cardTitle}>{noticia.title}</Text>
-            {noticia.description && (
-              <Text style={styles.description}>{noticia.description}</Text>
-            )}
-            <Text style={styles.date}>
-              {new Date(noticia.publishedAt).toLocaleDateString("pt-BR")}
-            </Text>
-            <Text style={styles.time}>
-              🕒 {new Date(noticia.publishedAt).toLocaleTimeString("pt-BR")}
-            </Text>
+      <TouchableOpacity style={styles.btnLimpar} onPress={handleLimpar}>
+        <Text style={styles.btnLimparText}>Limpar todas as notificações</Text>
+      </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => noticia.url && Linking.openURL(noticia.url)}
-            >
-              <Text style={styles.buttonText}>Ler mais</Text>
-            </TouchableOpacity>
-          </View>
-        ))
-      )}
-
-      <Text style={styles.footerMessage}>
-        💜 Seu sucesso inspira outras mulheres!
-      </Text>
+      <View style={styles.notificacoesContainer}>
+        {notificacoes.map((notif, i) => (
+          <Animated.View
+            key={i}
+            style={[styles.notificacaoCard, { opacity: notif.fadeAnim }]}
+          >
+            <View style={styles.notificacaoHeader}>
+              <Image
+                source={require("../../assets/megafone.png")}
+                style={styles.icon}
+              />
+              <Text style={styles.notificacaoTitulo}>{notif.titulo}</Text>
+            </View>
+            <Text style={styles.notificacaoTexto}>{notif.texto}</Text>
+          </Animated.View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#FEE3EC",
     padding: 20,
-  },
-  backIcon: {
-    alignSelf: "flex-start",
-    marginBottom: 10,
-  },
-  logo: {
-    width: 150,
-    height: 150,
-    alignSelf: "center",
+    paddingTop: 40,
+    backgroundColor: "#fff",
+    flex: 1,
   },
   title: {
-    color: "#DB3C8A",
+    fontSize: 24,
     fontWeight: "bold",
-    fontSize: 16,
     marginBottom: 20,
+    color: "#DB3C8A",
     textAlign: "center",
   },
-  searchContainer: {
+  inputSection: {
     flexDirection: "row",
-    marginBottom: 20,
-    alignItems: "center",
-    gap: 6,
+    marginBottom: 10,
   },
   input: {
     flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderColor: "#DB3C8A",
     borderWidth: 1,
+    borderColor: "#DB3C8A",
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    fontSize: 16,
     color: "#333",
   },
-  searchButton: {
+  btnEnviar: {
     backgroundColor: "#DB3C8A",
-    padding: 10,
-    borderRadius: 10,
+    marginLeft: 10,
+    borderRadius: 25,
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
-  resetButton: {
-    backgroundColor: "#7A1153",
-    padding: 10,
-    borderRadius: 10,
-  },
-  card: {
-    backgroundColor: "#FFD1E8",
-    width: "100%",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 20,
-  },
-  cardImage: {
-    width: "100%",
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  cardTitle: {
-    color: "#7A1153",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  description: {
-    color: "#444",
-    fontSize: 14,
-    marginBottom: 6,
-  },
-  date: {
-    color: "#444",
-    fontSize: 12,
-  },
-  time: {
-    fontSize: 12,
-    color: "#555",
-    marginVertical: 4,
-  },
-  button: {
-    backgroundColor: "#DB3C8A",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    alignSelf: "flex-end",
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  buttonText: {
+  btnEnviarText: {
     color: "#fff",
     fontWeight: "bold",
   },
-  footerMessage: {
-    marginTop: 20,
-    color: "#A01773",
-    fontStyle: "italic",
-    textAlign: "center",
+  btnLimpar: {
+    backgroundColor: "#888",
+    borderRadius: 25,
+    paddingVertical: 10,
+    marginBottom: 20,
   },
-  noNews: {
-    color: "#A01773",
+  btnLimparText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  notificacoesContainer: {},
+  notificacaoCard: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  notificacaoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
+  notificacaoTitulo: {
+    fontWeight: "bold",
+    fontSize: 16,
+    color: "#DB3C8A",
+  },
+  notificacaoTexto: {
     fontSize: 14,
-    textAlign: "center",
-    marginTop: 30,
-  },
+    color: "#333",
+  },
 });
