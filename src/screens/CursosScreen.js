@@ -326,7 +326,6 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
-  },
+    fontSize: 16,
+  },
 });
-    
