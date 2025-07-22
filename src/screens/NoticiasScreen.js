@@ -8,34 +8,84 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  Vibration,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 
-export default function NotificacoesScreen() {
-  const [mensagem, setMensagem] = useState("");
+export function HomeScreen({ navigation, route }) {
+  const id = route.params?.id;
+  const [usuario, setUsuario] = useState(null);
   const [notificacoes, setNotificacoes] = useState([]);
 
-  const mensagensPadrao = [
+  const mensagens = [
     {
-      titulo: "Nova tarefa disponível!",
-      texto: "Você tem uma nova atividade para responder hoje.",
+      titulo: "Empreendedorismo Feminino",
+      texto: "Mulheres lideram 34% dos negócios no Brasil. Apoie e divulgue!",
     },
     {
-      titulo: "Lembrete de estudo",
-      texto: "Não se esqueça de revisar o conteúdo da aula de hoje.",
+      titulo: "Capacitação gratuita",
+      texto:
+        "Participe do curso online de liderança feminina promovido pelo SEBRAE.",
     },
     {
-      titulo: "Mensagem da professora",
-      texto: "Parabéns pelo seu desempenho na última atividade!",
+      titulo: "Financiamento",
+      texto:
+        "Novas linhas de crédito para mulheres empreendedoras já estão disponíveis.",
+    },
+    {
+      titulo: "Dica do dia",
+      texto:
+        "Networking é essencial: conecte-se com outras mulheres líderes hoje!",
     },
   ];
 
+  async function tocarNotificacao() {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const { sound } = await Audio.Sound.createAsync(
+        require("../../assets/notification.mp3") // adicione um som nesse caminho
+      );
+      await sound.playAsync();
+    } catch (error) {
+      console.log("Erro ao tocar som:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (id) {
+      axios
+        .get(http://localhost:3000/usuarios/${id})
+        .then((response) => setUsuario(response.data))
+        .catch((error) =>
+          console.error("Erro ao buscar usuário na Home:", error)
+        );
+    }
+  }, [id]);
+
   useEffect(() => {
     let index = 0;
+
     const intervalo = setInterval(() => {
-      if (index < mensagensPadrao.length) {
-        adicionarNotificacao(mensagensPadrao[index]);
+      if (index < mensagens.length) {
+        const fadeAnim = new Animated.Value(0);
+
+        setNotificacoes((prev) => [
+          {
+            ...mensagens[index],
+            fadeAnim,
+          },
+          ...prev,
+        ]);
+
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }).start();
+
+        tocarNotificacao();
         index++;
       } else {
         clearInterval(intervalo);
@@ -45,164 +95,312 @@ export default function NotificacoesScreen() {
     return () => clearInterval(intervalo);
   }, []);
 
-  async function tocarSom() {
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require("../../assets/notificacao.mp3")
-      );
-      await sound.playAsync();
-    } catch (error) {
-      console.log("Erro ao tocar som:", error);
-    }
-  }
-
-  const adicionarNotificacao = (novaMensagem) => {
-    const fadeAnim = new Animated.Value(0);
-
-    const novaNotif = { ...novaMensagem, fadeAnim };
-
-    setNotificacoes((prev) => [novaNotif, ...prev]);
-
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-
-    Vibration.vibrate(300);
-    tocarSom();
-  };
-
-  const handleEnviar = () => {
-    if (mensagem.trim() === "") return;
-    adicionarNotificacao({ titulo: "Nova notificação", texto: mensagem });
-    setMensagem("");
-  };
-
-  const handleLimpar = () => {
-    setNotificacoes([]);
-  };
-
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Central de Notificações</Text>
+    <View style={styles.fullContainer}>
+      <ScrollView style={styles.container}>
+        {/* Topo */}
+        <View style={styles.topBar}>
+          <Image
+            source={require("../../assets/logo.png")}
+            style={styles.logo}
+          />
+          <View style={{ alignItems: "center" }}>
+            <Text style={{ color: "#DB3C8A", fontWeight: "bold" }}>
+              {usuario?.nome || "Usuário"}
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Usuario", { id: id })}
+              style={{
+                backgroundColor: "#DB3C8A",
+                padding: 8,
+                borderRadius: 25,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="person-circle-outline" size={32} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <View style={styles.inputSection}>
-        <TextInput
-          placeholder="Digite uma nova notificação"
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={mensagem}
-          onChangeText={setMensagem}
-        />
-        <TouchableOpacity style={styles.btnEnviar} onPress={handleEnviar}>
-          <Text style={styles.btnEnviarText}>Enviar</Text>
+        {/* Campo de busca */}
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color="#999"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            placeholder="Pesquisa"
+            placeholderTextColor="#999"
+            style={styles.searchInput}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("Empresa", { id: id })}
+        >
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
+
+        {/* Catálogo */}
+        <Text style={styles.sectionTitle}>Catálogo de vendas</Text>
+        <View style={styles.catalogContainer}>
+          {[
+            {
+              label: "Salão",
+              img: require("../../assets/salao2.png"),
+              to: "CatalogoSalao",
+            },
+            {
+              label: "Loja",
+              img: require("../../assets/loja.png"),
+              to: "CatalogoLoja",
+            },
+            {
+              label: "Acessórios",
+              img: require("../../assets/acessorios.png"),
+              to: "CatalogoAcessorios",
+            },
+            {
+              label: "Estética",
+              img: require("../../assets/estetica.png"),
+              to: "CatalogoEstetica",
+            },
+            {
+              label: "Roupas",
+              img: require("../../assets/roupas.png"),
+              to: "CatalogoRoupas",
+            },
+            {
+              label: "Pedicure",
+              img: require("../../assets/pedicure.png"),
+              to: "CatalogoPedicure",
+            },
+          ].map((item, index) => {
+            const Wrapper = item.to ? TouchableOpacity : View;
+            return (
+              <Wrapper
+                key={index}
+                style={styles.catalogItem}
+                {...(item.to && {
+                  onPress: () => navigation.navigate(item.to, { id: id }),
+                })}
+              >
+                <Image source={item.img} style={styles.catalogIcon} />
+                <Text style={styles.catalogText}>{item.label}</Text>
+              </Wrapper>
+            );
+          })}
+        </View>
+
+        {/* Notificações */}
+        <Text style={styles.sectionTitle}>Notificações</Text>
+        <TouchableOpacity
+          onPress={() => setNotificacoes([])}
+          style={{
+            alignSelf: "flex-end",
+            marginBottom: 10,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            backgroundColor: "#DB3C8A",
+            borderRadius: 15,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
+            Limpar tudo
+          </Text>
+        </TouchableOpacity>
+        <View style={styles.notificationsSection}>
+          {notificacoes.map((notif, index) => (
+            <Animated.View
+              key={index}
+              style={[styles.notificationCard, { opacity: notif.fadeAnim }]}
+            >
+              <View style={styles.notificationHeader}>
+                <Image
+                  source={require("../../assets/megafone.png")}
+                  style={styles.notificationIcon}
+                />
+                <Text style={styles.notificationTitle}>{notif.titulo}</Text>
+              </View>
+              <Text style={styles.notificationText}>{notif.texto}</Text>
+            </Animated.View>
+          ))}
+        </View>
+
+        {/* Feedbacks */}
+        <TouchableOpacity
+          style={styles.feedbackListButton}
+          onPress={() => navigation.navigate("FeedbackList", { id: id })}
+        >
+          <Ionicons name="star-outline" size={20} color="#fff" />
+          <Text style={styles.feedbackListButtonText}>
+            Ver feedbacks de outros usuários
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Menu inferior */}
+      <View style={styles.bottomMenu}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => navigation.navigate("Cursos", { id: id })}
+        >
+          <Ionicons name="book-outline" size={24} color="#fff" />
+          <Text style={styles.menuText}>Cursos</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => navigation.navigate("Noticias", { id: id })}
+        >
+          <Ionicons name="newspaper-outline" size={24} color="#fff" />
+          <Text style={styles.menuText}>Notícias</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => navigation.navigate("Feedback", { id })}
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#fff" />
+          <Text style={styles.menuText}>Feedback</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.btnLimpar} onPress={handleLimpar}>
-        <Text style={styles.btnLimparText}>Limpar todas as notificações</Text>
-      </TouchableOpacity>
-
-      <View style={styles.notificacoesContainer}>
-        {notificacoes.map((notif, i) => (
-          <Animated.View
-            key={i}
-            style={[styles.notificacaoCard, { opacity: notif.fadeAnim }]}
-          >
-            <View style={styles.notificacaoHeader}>
-              <Image
-                source={require("../../assets/megafone.png")}
-                style={styles.icon}
-              />
-              <Text style={styles.notificacaoTitulo}>{notif.titulo}</Text>
-            </View>
-            <Text style={styles.notificacaoTexto}>{notif.texto}</Text>
-          </Animated.View>
-        ))}
-      </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingTop: 40,
-    backgroundColor: "#fff",
-    flex: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#DB3C8A",
-    textAlign: "center",
-  },
-  inputSection: {
+  fullContainer: { flex: 1, backgroundColor: "#FEE3EC" },
+  container: { padding: 20, paddingBottom: 100 },
+  topBar: {
     flexDirection: "row",
-    marginBottom: 10,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#DB3C8A",
+  logo: { width: 50, height: 50, resizeMode: "contain" },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 8,
-    fontSize: 16,
-    color: "#333",
+    borderWidth: 1,
+    borderColor: "#DB3C8A",
   },
-  btnEnviar: {
+  searchIcon: { marginRight: 8 },
+  searchInput: { flex: 1, fontSize: 16, color: "#333" },
+  addButton: {
+    alignSelf: "flex-end",
     backgroundColor: "#DB3C8A",
-    marginLeft: 10,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  btnEnviarText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  btnLimpar: {
-    backgroundColor: "#888",
-    borderRadius: 25,
-    paddingVertical: 10,
+    marginTop: 15,
     marginBottom: 20,
   },
-  btnLimparText: {
-    color: "#fff",
-    textAlign: "center",
+  addButtonText: { fontSize: 24, color: "#fff", lineHeight: 26 },
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#DB3C8A",
+    marginBottom: 10,
   },
-  notificacoesContainer: {},
-  notificacaoCard: {
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
+  catalogContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  catalogItem: {
+    width: "30%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  catalogIcon: {
+    width: 60,
+    height: 60,
+    marginBottom: 5,
+    resizeMode: "contain",
+  },
+  catalogText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#DB3C8A",
+    textAlign: "center",
+  },
+  notificationsSection: {
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  notificationCard: {
+    backgroundColor: "#fff",
     padding: 15,
-    marginBottom: 12,
+    borderRadius: 12,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
-  notificacaoHeader: {
+  notificationHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 5,
   },
-  icon: {
+  notificationIcon: {
     width: 20,
     height: 20,
     marginRight: 8,
+    resizeMode: "contain",
   },
-  notificacaoTitulo: {
+  notificationTitle: {
     fontWeight: "bold",
-    fontSize: 16,
     color: "#DB3C8A",
   },
-  notificacaoTexto: {
-    fontSize: 14,
+  notificationText: {
     color: "#333",
+  },
+  bottomMenu: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#DB3C8A",
+    paddingVertical: 10,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    elevation: 10,
+  },
+  menuButton: {
+    alignItems: "center",
+  },
+  menuText: {
+    color: "#fff",
+    fontSize: 12,
+    marginTop: 2,
+  },
+  feedbackListButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#DB3C8A",
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginBottom: 30,
+    alignSelf: "center",
+  },
+  feedbackListButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    marginLeft: 8,
+    fontSize: 14,
   },
 });
