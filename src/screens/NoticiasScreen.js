@@ -14,7 +14,7 @@ import axios from "axios";
 import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 
-export function HomeScreen({ navigation, route }) {
+export function NoticiasScreen({ navigation, route }) {
   const id = route.params?.id;
   const [usuario, setUsuario] = useState(null);
   const [notificacoes, setNotificacoes] = useState([]);
