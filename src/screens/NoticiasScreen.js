@@ -1,406 +1,273 @@
-import React, { useEffect, useState } from "react";
+
+
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  TextInput,
   TouchableOpacity,
   Image,
-  Animated,
+  ScrollView,
+  TextInput,
+  Linking,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
-import { Audio } from "expo-av";
-import * as Haptics from "expo-haptics";
 
 export function NoticiasScreen({ navigation, route }) {
   const id = route.params?.id;
-  const [usuario, setUsuario] = useState(null);
-  const [notificacoes, setNotificacoes] = useState([]);
 
-  const mensagens = [
+  const noticiasMock = [
     {
-      titulo: "Empreendedorismo Feminino",
-      texto: "Mulheres lideram 34% dos negócios no Brasil. Apoie e divulgue!",
+      title:
+        "10 mulheres que transformam o empreendedorismo e a tecnologia no Brasil",
+      description:
+        "Conheça histórias inspiradoras de mulheres que estão revolucionando o mercado tecnológico no país.",
+      image:
+        "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.dgitais.com%2Fpost%2Ftendencias-de-mulheres-empreendedoras%2F&psig=AOvVaw2dWjqG0d63eh19uAQgqR3x&ust=1753233821149000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCJCVjounz44DFQAAAAAdAAAAABAE.jpg",
+      publishedAt: "2025-07-16T14:00:00Z",
+      url: "https://exame.com/pme/10-mulheres-que-transformam-o-empreendedorismo-e-a-tecnologia-no-brasil/",
     },
     {
-      titulo: "Capacitação gratuita",
-      texto:
-        "Participe do curso online de liderança feminina promovido pelo SEBRAE.",
+      title:
+        "Feira para mulheres empreendedoras arretadas de Picuí movimenta economia criativa",
+      description:
+        "Evento movimentou a economia local durante os três dias da tradicional festa de São Pedro em Picuí.",
+      image:
+        "https://www.google.com/url?sa=i&url=https%3A%2F%2Faliancaenergia.com.br%2Fnoticias%2Falianca-presente-no-i-forum-das-mulheres-empreendedoras-de-icapui%2F&psig=AOvVaw3slbtLL23bM9ChUrbJ2Crm&ust=1753233885272000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCIjXiKunz44DFQAAAAAdAAAAABAf.jpg",
+      publishedAt: "2025-07-15T10:00:00Z",
+      url: "https://picui.pb.gov.br/noticia/feira-para-mulheres-empreendedoras-arretadas-de-picui-movimenta-economia-criativa-durante-os-tres-dias-da-tradicional-festa-de-sao-pedro",
     },
     {
-      titulo: "Financiamento",
-      texto:
-        "Novas linhas de crédito para mulheres empreendedoras já estão disponíveis.",
+      title: "Projeto incentiva crianças a desenvolver o empreendedorismo",
+      description:
+        "Iniciativa do Sesc incentiva o empreendedorismo desde a infância, despertando habilidades desde cedo.",
+      image:
+        "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.sescpe.org.br%2F2018%2F09%2F04%2Fprojeto-incentiva-criancas-a-desenvolver-o-empreendedorismo%2F&psig=AOvVaw0GugUKFOAcgjkzLQETedki&ust=1753233694525000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNDQ2vKmz44DFQAAAAAdAAAAABAE.jpg",
+      publishedAt: "2025-07-14T08:00:00Z",
+      url: "https://www.sescpe.org.br/2018/09/04/projeto-incentiva-criancas-a-desenvolver-o-empreendedorismo/",
     },
     {
-      titulo: "Dica do dia",
-      texto:
-        "Networking é essencial: conecte-se com outras mulheres líderes hoje!",
+      title: "Mulheres negras empreendedoras transformam comunidades",
+      description:
+        "Fundo Agbara apoia mulheres negras no empreendedorismo, promovendo inclusão social e econômica.",
+      image:
+        "https://cdn.pixabay.com/photo/2020/01/07/18/54/african-american-4743930_1280.jpg",
+      publishedAt: "2025-07-12T12:30:00Z",
+      url: "https://fundoagbara.org.br",
     },
   ];
 
-  async function tocarNotificacao() {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const { sound } = await Audio.Sound.createAsync(
-        require("../../assets/notification.mp3") // adicione um som nesse caminho
-      );
-      await sound.playAsync();
-    } catch (error) {
-      console.log("Erro ao tocar som:", error);
+  const [search, setSearch] = useState("");
+  const [noticias, setNoticias] = useState(noticiasMock);
+
+  const handleSearch = () => {
+    const resultado = noticiasMock.filter(
+      (noticia) =>
+        noticia.title.toLowerCase().includes(search.toLowerCase()) ||
+        noticia.description.toLowerCase().includes(search.toLowerCase())
+    );
+    setNoticias(resultado);
+  };
+
+  const resetSearch = () => {
+    setSearch("");
+    setNoticias(noticiasMock);
+  };
+
+  const abrirLink = async (url) => {
+    const podeAbrir = await Linking.canOpenURL(url);
+    if (podeAbrir) {
+      Linking.openURL(url);
+    } else {
+      Alert.alert("Erro", "Não foi possível abrir o link.");
     }
-  }
-
-  useEffect(() => {
-    if (id) {
-      axios
-        .get(http://localhost:3000/usuarios/${id})
-        .then((response) => setUsuario(response.data))
-        .catch((error) =>
-          console.error("Erro ao buscar usuário na Home:", error)
-        );
-    }
-  }, [id]);
-
-  useEffect(() => {
-    let index = 0;
-
-    const intervalo = setInterval(() => {
-      if (index < mensagens.length) {
-        const fadeAnim = new Animated.Value(0);
-
-        setNotificacoes((prev) => [
-          {
-            ...mensagens[index],
-            fadeAnim,
-          },
-          ...prev,
-        ]);
-
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }).start();
-
-        tocarNotificacao();
-        index++;
-      } else {
-        clearInterval(intervalo);
-      }
-    }, 4000);
-
-    return () => clearInterval(intervalo);
-  }, []);
+  };
 
   return (
-    <View style={styles.fullContainer}>
-      <ScrollView style={styles.container}>
-        {/* Topo */}
-        <View style={styles.topBar}>
-          <Image
-            source={require("../../assets/logo.png")}
-            style={styles.logo}
-          />
-          <View style={{ alignItems: "center" }}>
-            <Text style={{ color: "#DB3C8A", fontWeight: "bold" }}>
-              {usuario?.nome || "Usuário"}
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Usuario", { id: id })}
-              style={{
-                backgroundColor: "#DB3C8A",
-                padding: 8,
-                borderRadius: 25,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="person-circle-outline" size={32} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
+    <ScrollView style={styles.container}>
+      <Ionicons
+        name="arrow-back"
+        size={24}
+        color="#DB3C8A"
+        style={styles.backIcon}
+        onPress={() => navigation.navigate("Home", { id })}
+      />
 
-        {/* Campo de busca */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color="#999"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder="Pesquisa"
-            placeholderTextColor="#999"
-            style={styles.searchInput}
-          />
-        </View>
+      <Image source={require("../../assets/logo.png")} style={styles.logo} />
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("Empresa", { id: id })}
-        >
-          <Text style={styles.addButtonText}>+</Text>
+      <Text style={styles.title}>
+        <Ionicons name="newspaper" size={18} color="#DB3C8A" /> Notícias sobre
+        empreendedorismo feminino!
+      </Text>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          placeholder="Buscar por palavras..."
+          placeholderTextColor="#A01773"
+          value={search}
+          onChangeText={setSearch}
+          style={styles.input}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <Ionicons name="search" size={20} color="#fff" />
         </TouchableOpacity>
-
-        {/* Catálogo */}
-        <Text style={styles.sectionTitle}>Catálogo de vendas</Text>
-        <View style={styles.catalogContainer}>
-          {[
-            {
-              label: "Salão",
-              img: require("../../assets/salao2.png"),
-              to: "CatalogoSalao",
-            },
-            {
-              label: "Loja",
-              img: require("../../assets/loja.png"),
-              to: "CatalogoLoja",
-            },
-            {
-              label: "Acessórios",
-              img: require("../../assets/acessorios.png"),
-              to: "CatalogoAcessorios",
-            },
-            {
-              label: "Estética",
-              img: require("../../assets/estetica.png"),
-              to: "CatalogoEstetica",
-            },
-            {
-              label: "Roupas",
-              img: require("../../assets/roupas.png"),
-              to: "CatalogoRoupas",
-            },
-            {
-              label: "Pedicure",
-              img: require("../../assets/pedicure.png"),
-              to: "CatalogoPedicure",
-            },
-          ].map((item, index) => {
-            const Wrapper = item.to ? TouchableOpacity : View;
-            return (
-              <Wrapper
-                key={index}
-                style={styles.catalogItem}
-                {...(item.to && {
-                  onPress: () => navigation.navigate(item.to, { id: id }),
-                })}
-              >
-                <Image source={item.img} style={styles.catalogIcon} />
-                <Text style={styles.catalogText}>{item.label}</Text>
-              </Wrapper>
-            );
-          })}
-        </View>
-
-        {/* Notificações */}
-        <Text style={styles.sectionTitle}>Notificações</Text>
-        <TouchableOpacity
-          onPress={() => setNotificacoes([])}
-          style={{
-            alignSelf: "flex-end",
-            marginBottom: 10,
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            backgroundColor: "#DB3C8A",
-            borderRadius: 15,
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
-            Limpar tudo
-          </Text>
-        </TouchableOpacity>
-        <View style={styles.notificationsSection}>
-          {notificacoes.map((notif, index) => (
-            <Animated.View
-              key={index}
-              style={[styles.notificationCard, { opacity: notif.fadeAnim }]}
-            >
-              <View style={styles.notificationHeader}>
-                <Image
-                  source={require("../../assets/megafone.png")}
-                  style={styles.notificationIcon}
-                />
-                <Text style={styles.notificationTitle}>{notif.titulo}</Text>
-              </View>
-              <Text style={styles.notificationText}>{notif.texto}</Text>
-            </Animated.View>
-          ))}
-        </View>
-
-        {/* Feedbacks */}
-        <TouchableOpacity
-          style={styles.feedbackListButton}
-          onPress={() => navigation.navigate("FeedbackList", { id: id })}
-        >
-          <Ionicons name="star-outline" size={20} color="#fff" />
-          <Text style={styles.feedbackListButtonText}>
-            Ver feedbacks de outros usuários
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* Menu inferior */}
-      <View style={styles.bottomMenu}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => navigation.navigate("Cursos", { id: id })}
-        >
-          <Ionicons name="book-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Cursos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => navigation.navigate("Noticias", { id: id })}
-        >
-          <Ionicons name="newspaper-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Notícias</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => navigation.navigate("Feedback", { id })}
-        >
-          <Ionicons name="chatbubble-ellipses-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Feedback</Text>
+        <TouchableOpacity style={styles.resetButton} onPress={resetSearch}>
+          <Ionicons name="refresh" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-    </View>
+
+      {noticias.length === 0 ? (
+        <Text style={styles.noNews}>Nenhuma notícia encontrada.</Text>
+      ) : (
+        noticias.map((noticia, i) => (
+          <View key={noticia.url || i} style={styles.card}>
+            {/* A imagem da notícia aqui */}
+            {noticia.image && (
+              <Image source={{ uri: noticia.image }} style={styles.cardImage} />
+            )}
+
+            <Text style={styles.cardTitle}>{noticia.title}</Text>
+            {noticia.description && (
+              <Text style={styles.description}>{noticia.description}</Text>
+            )}
+            <Text style={styles.date}>
+              {new Date(noticia.publishedAt).toLocaleDateString("pt-BR")}
+            </Text>
+            <Text style={styles.time}>
+              🕒 {new Date(noticia.publishedAt).toLocaleTimeString("pt-BR")}
+            </Text>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => abrirLink(noticia.url)}
+            >
+              <Text style={styles.buttonText}>Ler mais</Text>
+            </TouchableOpacity>
+          </View>
+        ))
+      )}
+
+      <Text style={styles.footerMessage}>
+        💜 Seu sucesso inspira outras mulheres!
+      </Text>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  fullContainer: { flex: 1, backgroundColor: "#FEE3EC" },
-  container: { padding: 20, paddingBottom: 100 },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: "#FEE3EC",
+    padding: 20,
   },
-  logo: { width: 50, height: 50, resizeMode: "contain" },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#DB3C8A",
-  },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 16, color: "#333" },
-  addButton: {
-    alignSelf: "flex-end",
-    backgroundColor: "#DB3C8A",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 15,
-    marginBottom: 20,
-  },
-  addButtonText: { fontSize: 24, color: "#fff", lineHeight: 26 },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#DB3C8A",
+  backIcon: {
+    alignSelf: "flex-start",
     marginBottom: 10,
   },
-  catalogContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  catalogItem: {
-    width: "30%",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  catalogIcon: {
-    width: 60,
-    height: 60,
-    marginBottom: 5,
-    resizeMode: "contain",
-  },
-  catalogText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#DB3C8A",
-    textAlign: "center",
-  },
-  notificationsSection: {
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  notificationCard: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  notificationHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  notificationIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-    resizeMode: "contain",
-  },
-  notificationTitle: {
-    fontWeight: "bold",
-    color: "#DB3C8A",
-  },
-  notificationText: {
-    color: "#333",
-  },
-  bottomMenu: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#DB3C8A",
-    paddingVertical: 10,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    elevation: 10,
-  },
-  menuButton: {
-    alignItems: "center",
-  },
-  menuText: {
-    color: "#fff",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  feedbackListButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#DB3C8A",
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginBottom: 30,
+  logo: {
+    width: 150,
+    height: 150,
     alignSelf: "center",
   },
-  feedbackListButtonText: {
+  title: {
+    color: "#DB3C8A",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    alignItems: "center",
+    gap: 6,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderColor: "#DB3C8A",
+    borderWidth: 1,
+    color: "#333",
+  },
+  searchButton: {
+    backgroundColor: "#DB3C8A",
+    padding: 10,
+    borderRadius: 10,
+  },
+  resetButton: {
+    backgroundColor: "#7A1153",
+    padding: 10,
+    borderRadius: 10,
+  },
+  card: {
+    backgroundColor: "#FFD1E8",
+    width: "100%",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  cardTitle: {
+    color: "#7A1153",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 6,
+  },
+  description: {
+    color: "#444",
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  date: {
+    color: "#444",
+    fontSize: 12,
+  },
+  time: {
+    fontSize: 12,
+    color: "#555",
+    marginVertical: 4,
+  },
+  button: {
+    backgroundColor: "#DB3C8A",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    alignSelf: "flex-end",
+    borderRadius: 20,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  buttonText: {
     color: "#fff",
     fontWeight: "bold",
-    marginLeft: 8,
-    fontSize: 14,
-  },
+  },
+  footerMessage: {
+    marginTop: 20,
+    color: "#A01773",
+    fontStyle: "italic",
+    textAlign: "center",
+  },
+  noNews: {
+    color: "#A01773",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 30,
+  },
 });
