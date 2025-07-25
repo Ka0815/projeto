@@ -7,40 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
-import { Audio } from "expo-av"; // Importação corrigida
-import * as Haptics from "expo-haptics"; // Importação corrigida
 
 export function HomeScreen({ navigation, route }) {
-  const id = route.params?.id; // pega o id do usuário logado
-  const notificacoesRecebidas = route.params?.notificacoes || [];
+  const id = route.params?.id;
   const [usuario, setUsuario] = useState(null);
-  const [notificacoes, setNotificacoes] = useState([]);
-
-  const mensagens = [
-    {
-      titulo: "Empreendedorismo Feminino",
-      texto: "Mulheres lideram 34% dos negócios no Brasil. Apoie e divulgue!",
-    },
-    {
-      titulo: "Capacitação gratuita",
-      texto:
-        "Participe do curso online de liderança feminina promovido pelo SEBRAE.",
-    },
-    {
-      titulo: "Financiamento",
-      texto:
-        "Novas linhas de crédito para mulheres empreendedoras já estão disponíveis.",
-    },
-    {
-      titulo: "Dica do dia",
-      texto:
-        "Networking é essencial: conecte-se com outras mulheres líderes hoje!",
-    },
-  ];
 
   useEffect(() => {
     if (id) {
@@ -53,63 +26,21 @@ export function HomeScreen({ navigation, route }) {
     }
   }, [id]);
 
-  async function tocarNotificacao() {
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const { sound } = await Audio.Sound.createAsync(
-        require("../../assets/notification.mp3")
-      );
-      await sound.playAsync();
-    } catch (error) {
-      console.log("Erro ao tocar som:", error);
-    }
-  }
-
-  useEffect(() => {
-    let index = 0;
-
-    const intervalo = setInterval(() => {
-      if (index < mensagens.length) {
-        const fadeAnim = new Animated.Value(0);
-
-        setNotificacoes((prev) => [
-          {
-            ...mensagens[index],
-            fadeAnim,
-          },
-          ...prev,
-        ]);
-
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }).start();
-
-        tocarNotificacao();
-        index++;
-      } else {
-        clearInterval(intervalo);
-      }
-    }, 4000);
-
-    return () => clearInterval(intervalo);
-  }, []);
-
   return (
     <View style={styles.fullContainer}>
       <ScrollView style={styles.container}>
         {/* Topo com logo e usuário */}
         <View style={styles.topBar}>
-          <Image source={require("../../assets/logo.png")} style={styles.logo} />
-
+          <Image
+            source={require("../../assets/logo.png")}
+            style={styles.logo}
+          />
           <View style={{ alignItems: "center" }}>
             <Text style={{ color: "#DB3C8A", fontWeight: "bold" }}>
               {usuario?.nome || "Usuário"}
             </Text>
-
             <TouchableOpacity
-              onPress={() => navigation.navigate("Usuario", { id: id })}
+              onPress={() => navigation.navigate("Usuario", { id })}
               style={{
                 backgroundColor: "#DB3C8A",
                 padding: 8,
@@ -131,12 +62,16 @@ export function HomeScreen({ navigation, route }) {
             color="#999"
             style={styles.searchIcon}
           />
-          <TextInput placeholder="Pesquisa" placeholderTextColor="#999" style={styles.searchInput} />
+          <TextInput
+            placeholder="Pesquisa"
+            placeholderTextColor="#999"
+            style={styles.searchInput}
+          />
         </View>
 
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("Empresa", { id: id })}
+          onPress={() => navigation.navigate("Empresa", { id })}
         >
           <Text style={styles.addButtonText}>+</Text>
         </TouchableOpacity>
@@ -179,7 +114,7 @@ export function HomeScreen({ navigation, route }) {
                 key={index}
                 style={styles.catalogItem}
                 {...(item.to && {
-                  onPress: () => navigation.navigate(item.to, { id: id }),
+                  onPress: () => navigation.navigate(item.to, { id }),
                 })}
               >
                 <Image source={item.img} style={styles.catalogIcon} />
@@ -190,44 +125,28 @@ export function HomeScreen({ navigation, route }) {
         </View>
 
         {/* Notificações */}
-        <Text style={styles.sectionTitle}>Notificações</Text>
-        <TouchableOpacity
-          onPress={() => setNotificacoes([])}
-          style={{
-            alignSelf: "flex-end",
-            marginBottom: 10,
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            backgroundColor: "#DB3C8A",
-            borderRadius: 15,
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
-            Limpar tudo
-          </Text>
-        </TouchableOpacity>
         <View style={styles.notificationsSection}>
-          {notificacoes.map((notif, index) => (
-            <Animated.View
-              key={index}
-              style={[styles.notificationCard, { opacity: notif.fadeAnim }]}
-            >
+          {[1, 2].map((num) => (
+            <View key={num} style={styles.notificationCard}>
               <View style={styles.notificationHeader}>
                 <Image
                   source={require("../../assets/megafone.png")}
                   style={styles.notificationIcon}
                 />
-                <Text style={styles.notificationTitle}>{notif.titulo}</Text>
+                <Text style={styles.notificationTitle}>Notificação {num}</Text>
               </View>
-              <Text style={styles.notificationText}>{notif.texto}</Text>
-            </Animated.View>
+              <Text style={styles.notificationText}>
+                Consultant - Internal Medicine
+              </Text>
+              <Text style={styles.notificationReview}>⭐ 4.9 (37 Reviews)</Text>
+            </View>
           ))}
         </View>
 
         {/* Botão para ver feedbacks */}
         <TouchableOpacity
           style={styles.feedbackListButton}
-          onPress={() => navigation.navigate("FeedbackList", { id: id })}
+          onPress={() => navigation.navigate("FeedbackList", { id })}
         >
           <Ionicons name="star-outline" size={20} color="#fff" />
           <Text style={styles.feedbackListButtonText}>
@@ -240,9 +159,7 @@ export function HomeScreen({ navigation, route }) {
       <View style={styles.bottomMenu}>
         <TouchableOpacity
           style={styles.menuButton}
-          onPress={() =>
-            navigation.navigate("Cursos", { id: id })
-          }
+          onPress={() => navigation.navigate("Cursos", { id })}
         >
           <Ionicons name="book-outline" size={24} color="#fff" />
           <Text style={styles.menuText}>Cursos</Text>
@@ -250,9 +167,7 @@ export function HomeScreen({ navigation, route }) {
 
         <TouchableOpacity
           style={styles.menuButton}
-          onPress={() =>
-            navigation.navigate("Noticias", { id: id, notificacoes })
-          }
+          onPress={() => navigation.navigate("Noticias", { id })}
         >
           <Ionicons name="newspaper-outline" size={24} color="#fff" />
           <Text style={styles.menuText}>Notícias</Text>
@@ -358,9 +273,9 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     backgroundColor: "#fff",
-    padding: 12,
+    padding: 15,
     borderRadius: 12,
-    marginBottom: 8,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -382,6 +297,11 @@ const styles = StyleSheet.create({
   },
   notificationText: {
     color: "#333",
+  },
+  notificationReview: {
+    marginTop: 5,
+    fontStyle: "italic",
+    color: "#888",
   },
   bottomMenu: {
     position: "absolute",
